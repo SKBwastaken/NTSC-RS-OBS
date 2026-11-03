@@ -310,7 +310,8 @@ def build():
     spec = work / "extension.json"
     spec.write_text(json.dumps(manifest(lock, source_hash), indent=2) + "\n", encoding="utf-8")
     repo, tree = work / "repo", work / "build"
-    run("flatpak-builder", "--user", "--arch=x86_64", "--disable-rofiles-fuse",
+    # Keep build dirs: the test-only helper is taken from there, never from the payload.
+    run("flatpak-builder", "--user", "--arch=x86_64", "--disable-rofiles-fuse", "--keep-build-dirs",
         f"--repo={repo}", str(tree), str(spec), cwd=work)
     # Ensure the build did not resolve different deployments mid-run.
     verify_lock(lock)
