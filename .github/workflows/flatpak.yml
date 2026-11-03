@@ -52,5 +52,16 @@ jobs:
           fi
       - name: Build, audit final bundle and test real OBS sandbox
         run: dbus-run-session -- python3 packaging/flatpak/build.py build
-      # Deliberately no upload-artifact, release, installation into host OBS,
-      # repository write, or external publication step.
+      # Only reached when every audit and sandbox check passed. The checkout is
+      # the payload extracted from the final bundle, kept for the release review.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flatpak-candidate
+          retention-days: 3
+          if-no-files-found: error
+          path: |
+            dist/releases/*-Flatpak-x86_64.flatpak
+            test-output/flatpak-report.json
+            dist/flatpak/build-*/checkout/
+      # Deliberately no release, installation into host OBS, repository write,
+      # or external publication step.

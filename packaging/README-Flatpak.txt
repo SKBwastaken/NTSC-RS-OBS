@@ -1,31 +1,33 @@
 NTSC-RS for OBS, Flatpak extension (x86_64)
 
 STATUS AND DISCLAIMER
-Experimental build path. Flatpak compatibility has NOT been verified on the
-development machine (Windows without Linux/Flatpak). Do not treat the existence
-of build scripts as proof of compatibility. A candidate is copied into
-dist/releases only after its automated real-runtime sandbox test passes.
-Desktop GUI, file chooser/portal, Wayland, and long-duration tests are separate
-manual release checks. This is a vibe-coded proof of concept. Use at your own risk.
+Experimental. This bundle was built from source and tested automatically in
+GitHub Actions inside the real OBS Flatpak sandbox (Ubuntu 24.04, virtual
+display, software OpenGL): plugin loading, video processing, presets and
+sandboxed file access. It has NOT yet been tested in the OBS desktop interface
+on a real Linux desktop (file chooser/portal, Wayland, real GPUs, capture
+devices, long runs). This is a vibe-coded proof of concept. Use at your own risk.
 
 REQUIREMENTS
-- OBS Studio 32+ from Flathub, app ID com.obsproject.Studio, stable, x86_64.
-- A Flatpak bundle built for the matching OBS and runtime deployment.
-  See the accompanying local build report/lock for exact commits.
+- OBS Studio from Flathub, app ID com.obsproject.Studio, branch stable, x86_64.
+  The release notes list the OBS and runtime versions used for the test.
 - Do not use the Linux system-package ZIP with Flatpak, or this bundle with
   system-package OBS. Snap is not supported.
 
-INSTALL (only after the candidate has been tested)
+INSTALL
 1. Close Flatpak OBS yourself. The installer never stops OBS.
-2. Install the locally downloaded bundle:
-   flatpak install --user ./NTSC-RS-OBS-<version>-Flatpak-x86_64.flatpak
+2. Install the downloaded bundle in the same scope as OBS.
+   Check the scope with: flatpak list --app --columns=application,installation
+   Per-user OBS:
+     flatpak install --user ./NTSC-RS-OBS-<version>-Flatpak-x86_64.flatpak
+   System-wide OBS (asks for administrator authorization):
+     flatpak install --system ./NTSC-RS-OBS-<version>-Flatpak-x86_64.flatpak
 3. Start OBS as usual: flatpak run com.obsproject.Studio
 4. Source > Filters > Effect Filters > + > ntsc-rs (NTSC / VHS).
 
 This is a local, unsigned bundle, not a Flathub listing or an automatic updater.
 Verify its origin. Do not add a permanent remote or disable signature checks
-globally. Use the same Flatpak installation scope as OBS; the documented path
-assumes a per-user OBS installation. Consult the full guide for system scope.
+globally. Use the same Flatpak installation scope as OBS.
 
 The extension ID is com.obsproject.Studio.Plugin.NTSC_RS, branch stable.
 Flatpak mounts it at /app/plugins/NTSC_RS. The library is
@@ -53,7 +55,7 @@ home/host access or permanently change OBS permissions just for this plugin.
 The automated tests explicitly verify denied access without such overrides.
 
 REMOVE
-Close OBS yourself, then:
+Close OBS yourself, then (use --system for a system-wide install):
 flatpak uninstall --user com.obsproject.Studio.Plugin.NTSC_RS
 Never add --delete-data. This removes only the extension, not OBS settings.
 

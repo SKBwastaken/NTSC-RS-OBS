@@ -1,10 +1,11 @@
 # Experimental OBS Flatpak extension
 
-**Status: implemented build/test automation, not yet verified on a real Linux
-Flatpak installation.** Development took place on Windows without Flatpak or
-WSL. No Flatpak binary has been built or tested there. Do not advertise verified
-compatibility until the tests below pass and the final candidate is audited.
-Existing Windows and Linux system-package builds remain separate and unchanged.
+**Status: experimental.** The build, final-bundle audit and automated sandbox
+test below pass in GitHub Actions (Ubuntu 24.04, Xvfb, software OpenGL) against
+the stable OBS app from Flathub. The manual desktop checklist at the end has not
+yet been run: the OBS frontend, file chooser/portal, Wayland, real GPUs, capture
+devices and long runs are untested. Existing Windows and Linux system-package
+builds remain separate and unchanged.
 
 ## Why a separate build
 
@@ -61,9 +62,10 @@ stripped. Reusing the lock and identical sources controls inputs, but byte-for-b
 reproducibility of the complete OSTree bundle has not been demonstrated.
 
 The separate `.github/workflows/flatpak.yml` runs these steps on Linux.
-It does not publish releases, upload artifacts, or push changes. Workflow logs
-include the deployment lock and content hashes in the final report; they are
-not release assets. Public CI itself requires an approved GitHub push first.
+It does not publish releases or push changes. After every check passes, it keeps
+the tested bundle, its report and the audited bundle checkout as a short-lived
+workflow artifact for the release review. Workflow logs include the deployment
+lock and content hashes in the final report; they are not release assets.
 For a locked CI rebuild, supply the saved lock JSON via workflow dispatch.
 
 ### Automated runtime checks

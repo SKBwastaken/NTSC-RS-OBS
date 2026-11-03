@@ -13,10 +13,12 @@ Get them from [Releases](https://github.com/SKBwastaken/NTSC-RS-OBS/releases):
 - **Windows:** installer (`Windows-Setup.exe`) or manual ZIP (`Windows.zip`). Unsigned, so Windows may show a warning.
 - **Linux system packages:** `Linux.zip` for OBS 32+. Copy the `obs-ntsc-rs` folder into `~/.config/obs-studio/plugins/`. This ZIP is not for Flatpak or Snap.
 
-**Flatpak (experimental source build):** a separate extension build and real-sandbox
-test path is available in [the Flatpak guide](docs/FLATPAK.md). It has not yet been
-verified on a real Flatpak installation; no tested Flatpak download is currently
-offered. Do not reuse the system-package Linux ZIP. Snap remains unsupported.
+**Flatpak (experimental):** `Flatpak-x86_64.flatpak` for OBS from Flathub. Install it with
+`flatpak install --user ./NTSC-RS-OBS-<version>-Flatpak-x86_64.flatpak`. It is built from
+source and tested automatically inside the real OBS Flatpak sandbox (GitHub Actions,
+virtual display, software OpenGL). It has not yet been tried in the OBS desktop interface
+on a real Linux desktop. See [the Flatpak guide](docs/FLATPAK.md). Do not use the Linux ZIP
+with Flatpak. Snap remains unsupported.
 
 Close OBS before installing. In OBS: **Source → Filters → Effect Filters → + → ntsc-rs (NTSC / VHS)**.
 Each ZIP includes installation instructions.

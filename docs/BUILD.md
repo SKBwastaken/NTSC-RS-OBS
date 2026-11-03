@@ -90,7 +90,7 @@ default library path, set `OBS_LIB_DIR`. This build is not for Flatpak or Snap.
 Use the separate [Flatpak extension build and sandbox test](FLATPAK.md).
 It builds from source against the installed OBS Flatpak headers and matching SDK
 using a deployment lock. Do not repackage the system-package Linux binary.
-The Flatpak path is not yet runtime-verified on the development machine.
+The Flatpak build and sandbox test pass in GitHub Actions; desktop GUI tests are pending.
 `OBS_INCLUDE_DIR` selects alternative OBS headers; the existing vendored headers
 remain the default for Windows and system Linux builds.
 
