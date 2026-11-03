@@ -4,6 +4,8 @@
 
 A native OBS filter for Windows and Linux powered by **ntsc-rs**, bringing live NTSC/VHS effects to your video sources. Includes ntsc-rs controls, JSON preset import/export, and adjustable processing resolution and frame rate.
 
+![ntsc-rs filter in OBS](docs/images/df16573436b4.png)
+
 Currently CPU-based and SDR-only. Adds video latency without delaying audio. Tested with OBS 32.2.2 on Windows; the Linux build is tested automatically with OBS 32.2.0 on Ubuntu 24.04.
 
 ## Downloads
