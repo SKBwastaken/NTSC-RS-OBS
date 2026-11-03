@@ -88,7 +88,8 @@ Mit `$env:CARGO_NET_OFFLINE = 'true'` baut Cargo ohne Netzwerkzugriff.
 
 Der Workflow `.github/workflows/linux.yml` baut und testet die Linux-Version
 automatisch auf Ubuntu 24.04 mit OBS aus der offiziellen OBS-Paketquelle (PPA).
-Lokal unter Linux (OBS 32 oder neuer als Systempaket, Rust, GCC, Python 3.12):
+Lokal unter Linux (OBS 32 oder neuer als Systempaket, Rust, GCC, Python 3.12
+sowie die SIMDe-Header, unter Ubuntu Paket `libsimde-dev`):
 
 ```sh
 cargo build --release --locked --offline
