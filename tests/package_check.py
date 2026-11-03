@@ -24,7 +24,8 @@ EXPECTED = {
 def privacy_check(name, content):
     # Identity comes from local environment, never hard-coded in public tests.
     needles = [str(Path.home()), str(ROOT),
-               "\\Users\\", "/Users/", "Desktop\\", "Desktop/",
+               "\\Users\\", "/Users/", "/home/", "/run/build/", "/github/workspace",
+               "/__w/", "Desktop\\", "Desktop/",
                ".pdb", ".env"]
     # A neutral PDB basename can appear in the PE debug directory. PDB files
     # themselves are never part of the payload.
@@ -35,7 +36,7 @@ def privacy_check(name, content):
         for encoding in ("utf-8", "utf-16-le"):
             assert needle.encode(encoding).lower() not in content.lower(), \
                 f"Private path/metadata marker found in {name} ({encoding})"
-    username = os.environ.get("USERNAME", "")
+    username = os.environ.get("USERNAME") or os.environ.get("USER", "")
     if len(username) >= 3:
         # A short username can occur inside generic words (e.g. "Taskbar") or
         # compressed data. Check complete identifier tokens in actual strings.

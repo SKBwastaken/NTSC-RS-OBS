@@ -5,6 +5,7 @@ fn main() {
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     println!("cargo:rerun-if-env-changed=OBS_DIR");
     println!("cargo:rerun-if-env-changed=OBS_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=OBS_INCLUDE_DIR");
     println!("cargo:rerun-if-changed=native/filter.c");
     println!("cargo:rerun-if-changed=native/bridge.h");
     fs::write(
@@ -15,7 +16,11 @@ fn main() {
     let mut build = cc::Build::new();
     build
         .file("native/filter.c")
-        .include("vendor/obs-studio/libobs")
+        .include(
+            env::var_os("OBS_INCLUDE_DIR")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("vendor/obs-studio/libobs")),
+        )
         .include(&out)
         .define(
             "NTSC_RS_OBS_VERSION",

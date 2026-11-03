@@ -83,7 +83,16 @@ python3 packaging/package_linux.py
 
 Output: `target/release/libobs_ntsc_rs.so` and
 `dist/releases/NTSC-RS-OBS-<version>-Linux.zip`. If `libobs.so.0` is not in the
-default library path, set `OBS_LIB_DIR`. Flatpak and Snap OBS are not supported.
+default library path, set `OBS_LIB_DIR`. This build is not for Flatpak or Snap.
+
+### OBS Flatpak (experimental)
+
+Use the separate [Flatpak extension build and sandbox test](FLATPAK.md).
+It builds from source against the installed OBS Flatpak headers and matching SDK
+using a deployment lock. Do not repackage the system-package Linux binary.
+The Flatpak path is not yet runtime-verified on the development machine.
+`OBS_INCLUDE_DIR` selects alternative OBS headers; the existing vendored headers
+remain the default for Windows and system Linux builds.
 
 ## Tests
 

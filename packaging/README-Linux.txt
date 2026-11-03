@@ -15,7 +15,8 @@ REQUIREMENTS
   (for example the official OBS Ubuntu PPA, Arch Linux or Fedora packages).
 - 64-bit x86 (x86_64) Linux with glibc 2.39 or newer
   (for example Ubuntu 24.04 or newer, Debian 13, Fedora 40 or newer).
-- Not for Flatpak or Snap OBS. Those versions do not load this plugin folder.
+- This ZIP is not for Flatpak or Snap OBS. For the experimental, separately built
+  Flatpak extension, see docs/FLATPAK.md in the source repository.
 
 INSTALL
 1. Close OBS.

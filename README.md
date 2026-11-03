@@ -11,7 +11,12 @@ Currently CPU-based and SDR-only. Adds video latency without delaying audio. Tes
 Get them from [Releases](https://github.com/SKBwastaken/NTSC-RS-OBS/releases):
 
 - **Windows:** installer (`Windows-Setup.exe`) or manual ZIP (`Windows.zip`). Unsigned, so Windows may show a warning.
-- **Linux:** `Linux.zip` for OBS 32+ installed as a normal system package. Copy the `obs-ntsc-rs` folder into `~/.config/obs-studio/plugins/`. Flatpak and Snap OBS are not supported.
+- **Linux system packages:** `Linux.zip` for OBS 32+. Copy the `obs-ntsc-rs` folder into `~/.config/obs-studio/plugins/`. This ZIP is not for Flatpak or Snap.
+
+**Flatpak (experimental source build):** a separate extension build and real-sandbox
+test path is available in [the Flatpak guide](docs/FLATPAK.md). It has not yet been
+verified on a real Flatpak installation; no tested Flatpak download is currently
+offered. Do not reuse the system-package Linux ZIP. Snap remains unsupported.
 
 Close OBS before installing. In OBS: **Source → Filters → Effect Filters → + → ntsc-rs (NTSC / VHS)**.
 Each ZIP includes installation instructions.
