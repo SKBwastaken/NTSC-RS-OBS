@@ -1,0 +1,7 @@
+/target/
+/dist/
+/test-output/
+/HANDOFF.md
+**/__pycache__/
+*.py[cod]
+*.pdb

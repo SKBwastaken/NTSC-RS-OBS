@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Cargo's vendored checksums require exact original file bytes on all systems.
+vendor/cargo/** -text
