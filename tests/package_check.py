@@ -35,7 +35,8 @@ def privacy_check(name, content):
             continue
         for encoding in ("utf-8", "utf-16-le"):
             assert needle.encode(encoding).lower() not in content.lower(), \
-                f"Private path/metadata marker found in {name} ({encoding})"
+                f"Private path/metadata marker found in {name} ({encoding}): " + \
+                (needle if needle not in (str(Path.home()), str(ROOT)) else "local path")
     username = os.environ.get("USERNAME") or os.environ.get("USER", "")
     if len(username) >= 3:
         # A short username can occur inside generic words (e.g. "Taskbar") or

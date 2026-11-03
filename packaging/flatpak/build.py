@@ -184,7 +184,7 @@ def manifest(lock, source_hash):
             "prefix": PREFIX, "strip": True,
             "prepend-path": "/usr/lib/sdk/rust-stable/bin",
             "env": {
-                "CARGO_NET_OFFLINE": "true", "CARGO_HOME": "/run/build/ntsc-rs/.cargo-home",
+                "CARGO_NET_OFFLINE": "true", "CARGO_HOME": "/tmp/cargo-home",
                 "CARGO_PROFILE_RELEASE_STRIP": "symbols",
                 "OBS_INCLUDE_DIR": "/app/include/obs", "OBS_LIB_DIR": "/app/lib",
                 "RUSTFLAGS": "--remap-path-prefix=/run/build=ntsc-rs-obs",
