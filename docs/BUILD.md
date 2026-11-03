@@ -85,7 +85,7 @@ Output: `target/release/libobs_ntsc_rs.so` and
 `dist/releases/NTSC-RS-OBS-<version>-Linux.zip`. If `libobs.so.0` is not in the
 default library path, set `OBS_LIB_DIR`. This build is not for Flatpak or Snap.
 
-### OBS Flatpak (experimental)
+### OBS Flatpak
 
 Use the separate [Flatpak extension build and sandbox test](FLATPAK.md).
 It builds from source against the installed OBS Flatpak headers and matching SDK

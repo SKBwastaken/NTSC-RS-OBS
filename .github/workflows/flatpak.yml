@@ -1,4 +1,4 @@
-name: Experimental Flatpak build and sandbox test
+name: Flatpak build and sandbox test
 
 on:
   pull_request:

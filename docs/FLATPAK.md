@@ -1,6 +1,6 @@
-# Experimental OBS Flatpak extension
+# OBS Flatpak extension
 
-**Status: experimental.** The build, final-bundle audit and automated sandbox
+**Status:** The build, final-bundle audit and automated sandbox
 test below pass in GitHub Actions (Ubuntu 24.04, Xvfb, software OpenGL) against
 the stable OBS app from Flathub. The manual desktop checklist at the end has not
 yet been run: the OBS frontend, file chooser/portal, Wayland, real GPUs, capture
