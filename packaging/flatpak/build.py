@@ -216,7 +216,8 @@ def manifest(lock, source_hash):
                     'export CFLAGS="$CFLAGS -I${FLATPAK_DEST}/include"; '
                     'cargo test --release --locked --offline && cargo build --release --locked --offline',
                     # Test helper stays in the build tree, never in the extension payload.
-                    'cc -std=gnu11 -O2 -Wall -Wextra -Werror '
+                    # Newer OBS headers deprecate APIs this standalone harness still needs.
+                    'cc -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-error=deprecated-declarations '
                     '-I/app/include/obs -I"${FLATPAK_DEST}/include" '
                     'tests/flatpak_smoke.c -L/app/lib -Wl,-rpath,/app/lib '
                     '-l:libobs.so.0 -lX11 -lpthread -o flatpak-smoke',
