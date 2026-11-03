@@ -94,6 +94,13 @@ class FlatpakAutomationTests(unittest.TestCase):
         self.assertEqual(value["build-options"]["prefix"], "/app/plugins/NTSC_RS")
         self.assertNotIn("libexec", "\n".join(value["modules"][-1]["build-commands"]))
 
+    def test_ostree_audit_checkout_does_not_change_file_ownership(self):
+        calls = []
+        with patch.object(build, "run", side_effect=lambda *args, **kwargs: calls.append(args)):
+            build.checkout_for_audit(Path("repo"), "ref", Path("checkout"))
+        self.assertEqual(calls, [("ostree", "--repo=repo", "checkout", "--user-mode",
+                                  "ref", "checkout")])
+
     def test_source_archive_is_deterministic_and_explicit(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

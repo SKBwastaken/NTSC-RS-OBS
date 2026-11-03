@@ -65,6 +65,11 @@ def info(ref, flag):
     return run("flatpak", "info", "--user", flag, ref, capture=True)
 
 
+def checkout_for_audit(repo, ref, destination):
+    # The unprivileged CI runner cannot chown files to the OSTree-stored owner.
+    run("ostree", f"--repo={repo}", "checkout", "--user-mode", ref, str(destination))
+
+
 def validate_lock(lock):
     if lock.get("schema") != 1 or lock.get("extension_branch") != "stable":
         raise ValueError("Unsupported Flatpak lock")
@@ -331,7 +336,7 @@ def build():
     run("ostree", f"--repo={imported}", "init", "--mode=archive")
     run("flatpak", "build-import-bundle", str(imported), str(candidate))
     ref = f"runtime/{EXT}/x86_64/stable"
-    run("ostree", f"--repo={imported}", "checkout", ref, str(checkout))
+    checkout_for_audit(imported, ref, checkout)
     final_hashes = audit_tree(checkout / "files")
     audit_metadata(checkout / "metadata", lock)
     if final_hashes != staged_hashes:
