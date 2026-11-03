@@ -1,5 +1,5 @@
 #ifndef PluginVersion
-  #define PluginVersion "0.1.0"
+  #define PluginVersion "0.2.0"
 #endif
 #define ProjectRoot AddBackslash(SourcePath) + ".."
 #define Payload ProjectRoot + "\dist\obs-ntsc-rs"

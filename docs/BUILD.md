@@ -84,6 +84,25 @@ OBS selbst wird nicht gebaut und nicht verändert.
 Die gesperrten Rust-Abhängigkeiten sind unter `vendor/cargo` enthalten.
 Mit `$env:CARGO_NET_OFFLINE = 'true'` baut Cargo ohne Netzwerkzugriff.
 
+### Linux
+
+Der Workflow `.github/workflows/linux.yml` baut und testet die Linux-Version
+automatisch auf Ubuntu 24.04 mit OBS aus der offiziellen OBS-Paketquelle (PPA).
+Lokal unter Linux (OBS 32 oder neuer als Systempaket, Rust, GCC, Python 3.12):
+
+```sh
+cargo build --release --locked --offline
+xvfb-run -a python3 tests/obs_smoke.py
+python3 packaging/package_linux.py
+```
+
+Ausgabe: `target/release/libobs_ntsc_rs.so` und
+`dist/releases/NTSC-RS-OBS-0.2.0-Linux.zip`. Liegt `libobs.so.0` nicht im
+Standardsuchpfad, vorher `OBS_LIB_DIR` setzen. Flatpak- und Snap-OBS werden
+nicht unterstützt.
+
+### Windows-Downloadpakete
+
 Lokale Downloadpakete (Inno Setup 6 und Python erforderlich):
 
 ```powershell
@@ -92,8 +111,8 @@ Lokale Downloadpakete (Inno Setup 6 und Python erforderlich):
 
 Ausgabe unter `dist\releases`:
 
-- `NTSC-RS-OBS-0.1.0-Windows-Setup.exe`: Installer mit Deinstallation.
-- `NTSC-RS-OBS-0.1.0-Windows.zip`: manuelles Kopieren des Pluginordners.
+- `NTSC-RS-OBS-0.2.0-Windows-Setup.exe`: Installer mit Deinstallation.
+- `NTSC-RS-OBS-0.2.0-Windows.zip`: manuelles Kopieren des Pluginordners.
 
 Die separate öffentliche Anleitung `packaging\README.txt` enthält den
 Proof-of-Concept-/Vibe-Coding-Hinweis. Die Downloads enthalten dieselbe DLL,

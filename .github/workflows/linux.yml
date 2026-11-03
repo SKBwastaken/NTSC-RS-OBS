@@ -1,0 +1,72 @@
+name: Linux build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install OBS Studio and headless test dependencies
+        run: |
+          sudo add-apt-repository -y ppa:obsproject/obs-studio
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            obs-studio xvfb xauth libgl1-mesa-dri libegl-mesa0 libegl1 libx11-6
+          obs --version || true
+          dpkg -L obs-studio | grep -E 'libobs(-opengl)?\.so|image-source\.so|share/obs/libobs$' || true
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install 1.93.1 --profile minimal --component clippy,rustfmt
+          rustup default 1.93.1
+
+      - name: Unit tests, lint and format
+        env:
+          CARGO_NET_OFFLINE: "true"
+        run: |
+          cargo test --release --locked --offline
+          cargo clippy --release --all-targets --locked --offline -- -D warnings
+          cargo fmt --check
+
+      - name: Release build with neutral embedded paths
+        env:
+          CARGO_NET_OFFLINE: "true"
+          CARGO_PROFILE_RELEASE_STRIP: symbols
+        run: |
+          # The specific workspace prefix must come after the general home prefix.
+          export RUSTFLAGS="--remap-path-prefix=$HOME=builder --remap-path-prefix=$GITHUB_WORKSPACE=ntsc-rs-obs"
+          export CFLAGS="-ffile-prefix-map=$GITHUB_WORKSPACE=ntsc-rs-obs"
+          cargo build --release --locked --offline
+          nm -D --defined-only target/release/libobs_ntsc_rs.so | grep -E ' obs_module_(load|ver|set_pointer)$'
+          ldd target/release/libobs_ntsc_rs.so
+          objdump -T target/release/libobs_ntsc_rs.so | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -n 1
+
+      - name: OBS smoke test (isolated libobs, software OpenGL)
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python3 tests/obs_smoke.py
+
+      - name: Package Linux ZIP
+        run: python3 packaging/package_linux.py
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: linux-build
+          if-no-files-found: warn
+          path: |
+            dist/releases/*-Linux.zip
+            test-output/report.json
+            test-output/linux-package-check.json
+            test-output/before.png
+            test-output/after.png

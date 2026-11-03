@@ -1,12 +1,10 @@
 use std::{env, fs, path::PathBuf, process::Command};
 
 fn main() {
-    assert_eq!(env::var("CARGO_CFG_TARGET_OS").unwrap(), "windows");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let obs = PathBuf::from(
-        env::var_os("OBS_DIR").unwrap_or_else(|| r"C:\Program Files\obs-studio".into()),
-    );
     println!("cargo:rerun-if-env-changed=OBS_DIR");
+    println!("cargo:rerun-if-env-changed=OBS_LIB_DIR");
     println!("cargo:rerun-if-changed=native/filter.c");
     println!("cargo:rerun-if-changed=native/bridge.h");
     fs::write(
@@ -19,6 +17,22 @@ fn main() {
         .file("native/filter.c")
         .include("vendor/obs-studio/libobs")
         .include(&out)
+        .define(
+            "NTSC_RS_OBS_VERSION",
+            format!("\"{}\"", env::var("CARGO_PKG_VERSION").unwrap()).as_str(),
+        );
+    match target_os.as_str() {
+        "windows" => windows(build, &out),
+        "linux" => linux(build),
+        other => panic!("Unsupported target OS: {other}"),
+    }
+}
+
+fn windows(mut build: cc::Build, out: &std::path::Path) {
+    let obs = PathBuf::from(
+        env::var_os("OBS_DIR").unwrap_or_else(|| r"C:\Program Files\obs-studio".into()),
+    );
+    build
         .define("WIN32_LEAN_AND_MEAN", None)
         .flag("/std:c11")
         .flag("/experimental:c11atomics")
@@ -57,4 +71,18 @@ fn main() {
     build.compile("ntsc_obs_bridge");
     println!("cargo:rustc-link-search=native={}", out.display());
     println!("cargo:rustc-link-lib=dylib=obs");
+}
+
+fn linux(mut build: cc::Build) {
+    build.flag("-std=gnu11");
+    build.compile("ntsc_obs_bridge");
+    if let Some(dir) = env::var_os("OBS_LIB_DIR") {
+        println!(
+            "cargo:rustc-link-search=native={}",
+            PathBuf::from(dir).display()
+        );
+    }
+    // Distribution OBS packages ship the runtime SONAME, not always the
+    // unversioned development symlink.
+    println!("cargo:rustc-link-lib=dylib:+verbatim=libobs.so.0");
 }

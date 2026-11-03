@@ -1,6 +1,7 @@
-"""Real libobs/D3D11 integration test, isolated from the user's running OBS.
+"""Real libobs integration test, isolated from the user's running OBS.
 
-Requires Python 3.12+ and the installed OBS runtime. Never reads OBS profiles,
+Uses D3D11 on Windows and OpenGL on Linux (run under an X11 display such as
+xvfb-run). Requires Python 3.12+ and the installed OBS runtime. Never reads OBS profiles,
 scenes, credentials, capture devices, or the frontend's websocket server.
 """
 import ctypes as C
@@ -9,17 +10,37 @@ import json
 import os
 from pathlib import Path
 import struct
+import sys
 import threading
 import time
 import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
-OBS = Path(os.environ.get("OBS_DIR", r"C:\Program Files\obs-studio"))
+LINUX = sys.platform.startswith("linux")
 OUT = ROOT / "test-output"
 OUT.mkdir(exist_ok=True)
-DLL_DIR = os.add_dll_directory(str(OBS / "bin/64bit"))
-os.chdir(OBS / "bin/64bit")
-lib = C.CDLL(str(OBS / "bin/64bit/obs.dll"))
+if LINUX:
+    LIB_DIR = Path(os.environ.get("OBS_LIB_DIR", "/usr/lib/x86_64-linux-gnu"))
+    DATA_DIR = Path(os.environ.get("OBS_DATA_DIR", "/usr/share/obs"))
+    lib = C.CDLL("libobs.so.0", mode=C.RTLD_GLOBAL)
+    GRAPHICS = next(iter(sorted(LIB_DIR.glob("libobs-opengl.so*"))), None)
+    assert GRAPHICS, f"libobs-opengl not found in {LIB_DIR}"
+    IMAGE_PLUGIN = LIB_DIR / "obs-plugins/image-source.so"
+    IMAGE_DATA = DATA_DIR / "obs-plugins/image-source"
+    LIBOBS_DATA = DATA_DIR / "libobs"
+    DEFAULT_PLUGIN = ROOT / "target/release/libobs_ntsc_rs.so"
+    GRAPHICS_NAME = "OpenGL"
+else:
+    OBS = Path(os.environ.get("OBS_DIR", r"C:\Program Files\obs-studio"))
+    DLL_DIR = os.add_dll_directory(str(OBS / "bin/64bit"))
+    os.chdir(OBS / "bin/64bit")
+    lib = C.CDLL(str(OBS / "bin/64bit/obs.dll"))
+    GRAPHICS = OBS / "bin/64bit/libobs-d3d11.dll"
+    IMAGE_PLUGIN = OBS / "obs-plugins/64bit/image-source.dll"
+    IMAGE_DATA = OBS / "data/obs-plugins/image-source"
+    LIBOBS_DATA = OBS / "data/libobs"
+    DEFAULT_PLUGIN = ROOT / "target/release/obs_ntsc_rs.dll"
+    GRAPHICS_NAME = "D3D11"
 P, S, U, I, B = C.c_void_p, C.c_char_p, C.c_uint32, C.c_int, C.c_bool
 
 
@@ -119,7 +140,7 @@ frames = []
 @Callback
 def receive(_, frame):
     f = frame.contents
-    # Native D3D11 SDR output is BGRA. Convert to RGBA for PNG and assertions.
+    # The requested raw output format (7) is BGRA. Convert to RGBA for PNG and assertions.
     pixels = bytearray(b"".join(C.string_at(f.data[0] + y * f.linesize[0], 640 * 4)
                                 for y in range(480)))
     red, blue = pixels[0::4], pixels[2::4]
@@ -150,16 +171,25 @@ def main():
     pixels = bytes(channel for y in range(height) for x in range(width)
                    for channel in (*bars[x * 8 // width], 255))
     png(OUT / "test-pattern.png", width, height, pixels)
+    if LINUX:
+        x11 = C.CDLL("libX11.so.6")
+        x11.XOpenDisplay.restype = P
+        x11.XOpenDisplay.argtypes = [S]
+        display = x11.XOpenDisplay(None)
+        assert display, "No X11 display. Run under xvfb-run or a desktop session."
+        # OBS_NIX_PLATFORM_X11_EGL = 1 in the pinned public OBS headers.
+        api("obs_set_nix_platform", None, I)(1)
+        api("obs_set_nix_platform_display", None, P)(display)
     assert startup(b"en-US", utf8(OUT), None)
     source = effect = props = settings = None
     connected = False
     try:
-        add_data(utf8(OBS / "data/libobs"))
-        video = VideoInfo(utf8(OBS / "bin/64bit/libobs-d3d11.dll"), 60, 1,
+        add_data(utf8(str(LIBOBS_DATA) + os.sep))
+        video = VideoInfo(utf8(GRAPHICS), 60, 1,
                           width, height, width, height, 7, 0, False, 2, 2, 0)
-        assert reset_video(C.byref(video)) == 0, "D3D11 initialization failed"
-        load(OBS / "obs-plugins/64bit/image-source.dll", OBS / "data/obs-plugins/image-source")
-        load(Path(os.environ.get("NTSC_PLUGIN_DLL", ROOT / "target/release/obs_ntsc_rs.dll")), ROOT)
+        assert reset_video(C.byref(video)) == 0, f"{GRAPHICS_NAME} initialization failed"
+        load(IMAGE_PLUGIN, IMAGE_DATA)
+        load(Path(os.environ.get("NTSC_PLUGIN_DLL", DEFAULT_PLUGIN)), ROOT)
         image_settings = data_create()
         data_string(image_settings, b"file", utf8(OUT / "test-pattern.png"))
         source = create(b"image_source", b"isolated-test-pattern", image_settings, None)
@@ -218,7 +248,7 @@ def main():
             "properties_including_groups": count, "changed_bytes": changed,
             "unique_effect_frames_in_60_output_frames": unique,
             "average_obs_render_ms": round(render_ms, 3),
-            "checks": ["D3D11 module load", "live GPU-CPU-GPU processing",
+            "checks": [f"{GRAPHICS_NAME} module load", "live GPU-CPU-GPU processing",
                        "animated noise", "bypass", "resolution change",
                        "preset import/export callbacks", "Unicode preset path",
                        "export overwrite protection", "clean shutdown"],

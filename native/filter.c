@@ -266,7 +266,7 @@ bool bridge_load(void)
     info.video_tick = tick;
     info.video_render = render;
     obs_register_source(&info);
-    bridge_log("Loaded 0.1.0, native asynchronous NTSC/VHS filter");
+    bridge_log("Loaded " NTSC_RS_OBS_VERSION ", native asynchronous NTSC/VHS filter");
     return true;
 }
 
