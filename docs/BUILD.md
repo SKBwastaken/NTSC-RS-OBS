@@ -1,95 +1,79 @@
-# ntsc-rs für OBS
+# Building NTSC-RS for OBS
 
-Nativer NTSC-/VHS-Effektfilter für **OBS Studio 32, Windows**.
-Verwendet den echten Rust-Effektkern von [ntsc-rs](https://github.com/valadaptive/ntsc-rs),
-keine Browserquelle und keine Shader-Nachbildung.
+Native NTSC/VHS effect filter for **OBS Studio 32+** on Windows and Linux.
+It uses the real Rust effect core of [ntsc-rs](https://github.com/valadaptive/ntsc-rs),
+not a browser source or a shader imitation.
 
-## Benutzen
+## Usage
 
-Standardpfad nach Installation:
+1. Install the plugin (see the release downloads) and start OBS.
+2. Right-click a video source → **Filters**.
+3. Under **Effect Filters** click **+** → **ntsc-rs (NTSC / VHS)**.
+4. Start with **Maximum processing height = 480** and **Maximum effect FPS = 30**.
+5. Adjust the effect with the regular ntsc-rs controls. Groups can be toggled by checkbox.
 
-`C:\ProgramData\obs-studio\plugins\obs-ntsc-rs\bin\64bit\obs-ntsc-rs.dll`
-
-1. OBS starten oder neu starten.
-2. Rechtsklick auf eine Videoquelle → **Filter**.
-3. Unter **Effektfilter** auf **+** → **ntsc-rs (NTSC / VHS)**.
-4. Zunächst **Maximum processing height = 480**, **Maximum effect FPS = 30** verwenden.
-5. Effekt über die normalen ntsc-rs-Regler anpassen. Gruppen lassen sich per Checkbox abschalten.
-
-Die Oberfläche übernimmt die englischen Bezeichnungen und Beschreibungen von ntsc-rs.
-Es gibt 68 OBS-Eigenschaften einschließlich Gruppen, Preset- und Leistungsoptionen.
-Die Originalauflösung der Quelle und des OBS-Canvas bleibt unverändert.
+The filter exposes 68 OBS properties, including groups, preset and performance options.
+The original resolution of the source and the OBS canvas is unchanged.
 
 ### Presets
 
-- Auf web.ntsc.rs oder in ntsc-rs ein **ntsc-rs-JSON-Preset** exportieren.
-- Im Filter unter **ntsc-rs preset (.json)** auswählen und **Import preset** drücken.
-- Zum Speichern unter **Export preset to (.json)** einen neuen Dateinamen wählen,
-  dann **Export preset (new file only)** drücken.
-- Vorhandene Dateien werden absichtlich **nicht überschrieben**.
-- Einstellungen werden direkt in der OBS-Szene gespeichert. Die importierte Datei
-  muss für spätere OBS-Starts nicht vorhanden sein.
-- ntscQT-Presets und andere JSON-Formate sind nicht kompatibel.
-- Bei Fehlern die Statuszeile im Filter und den OBS-Logeintrag `[obs-ntsc-rs]` prüfen.
+- Export an **ntsc-rs JSON preset** from web.ntsc.rs or ntsc-rs.
+- Select it under **ntsc-rs preset (.json)** and press **Import preset**.
+- To save, choose a new file under **Export preset to (.json)**, then press
+  **Export preset (new file only)**. Existing files are never overwritten.
+- Settings are stored in the OBS scene; the imported file is not needed later.
+- ntscQT presets and other JSON formats are not compatible.
+- On errors, check the filter's status line and OBS log entries tagged `[obs-ntsc-rs]`.
 
-### Grenzen
+### Limitations
 
-- **CPU-Effekt:** Die GPU skaliert die Quelle herunter. Ein Hintergrundthread
-  verarbeitet das Bild, anschließend lädt OBS das Ergebnis wieder auf die GPU.
-- Standard: maximal **480 Zeilen / 30 Effekt-FPS**. Bei 16:9 sind das etwa 853 × 480 Pixel.
-  Bei hoher Last zunächst auf 240 oder 360 Zeilen reduzieren.
-- Die OBS-Ausgabe kann weiterhin mit 60 FPS laufen; Effektbilder werden dann wiederholt.
-  Eine begrenzte Warteschlange verwirft ältere Bilder statt immer mehr Verzögerung aufzubauen.
-- **Zusätzliche, variable Videoverzögerung:** Readback und Verarbeitung brauchen Zeit.
-  Audio wird nicht verzögert. Für Lippen-/Audio-Synchronität gegebenenfalls OBS-Sync-Offset
-  anhand einer Testaufnahme einstellen. Eine feste Latenz wurde nicht vermessen.
-- **Nur SDR.** HDR bzw. nicht unterstützte Farbräume werden unverändert durchgereicht.
-- Transparenz bleibt erhalten; der Effekt verschiebt nicht die Alpha-Maske selbst.
-- Kein Dauertest mit Spieleaufnahme, Kamera, HDR oder mehreren parallelen Filtern.
-  Die vorhandenen OBS-Szenen wurden nicht verändert.
+- **CPU effect:** the GPU downscales the source, a background thread processes it,
+  and the result is uploaded back to the GPU.
+- Default limit: **480 lines / 30 effect FPS** (about 853 × 480 for 16:9).
+  Under heavy load, try 240 or 360 lines.
+- OBS output can still run at 60 FPS; effect frames are then repeated. A bounded
+  queue drops old frames instead of building up delay.
+- **Additional, variable video latency.** Audio is not delayed; set an OBS sync
+  offset if needed. Latency has not been measured.
+- **SDR only.** HDR and unsupported color spaces pass through unchanged.
+- Transparency is preserved.
+- No long-running tests with game capture, cameras, HDR or many parallel filters.
 
-## Installation / Entfernen
+## Build on Windows
 
-Für eine erneute Installation aus dem Projektordner:
+Requirements: Rust with edition 2024 support, Visual Studio 2022 C++ build tools
+with the Windows SDK, and OBS Studio 32 installed. Tested with Rust 1.93.1 and MSVC 14.38.
 
 ```powershell
-.\install.ps1
-```
-
-Das Skript prüft den SHA-256-Hash. Eine andere bereits vorhandene Plugin-DLL
-wird nicht ersetzt. Bei einem Update OBS schließen und die alte DLL zunächst selbst sichern.
-Falls der Pluginordner nicht beschreibbar ist, das Skript als Administrator ausführen.
-Portable OBS-Installationen brauchen ihren eigenen Pluginpfad, nicht diesen ProgramData-Pfad.
-
-Zum Entfernen OBS schließen und nur den Ordner
-`C:\ProgramData\obs-studio\plugins\obs-ntsc-rs` entfernen.
-Keine anderen Pluginordner oder OBS-Einstellungen löschen.
-
-## Bauen
-
-Voraussetzungen: Rust/Cargo mit Edition-2024-Unterstützung, Visual Studio 2022
-mit C++-/Windows-SDK-Tools und C11-Atomics-Unterstützung sowie OBS 32 x64.
-Getestet mit Rust 1.93.1 und MSVC 14.38.
-
-```powershell
-Set-Location 'path\to\NTSC-RS-OBS'
 .\build-release.ps1
 ```
 
-Ausgabe: `target\release\obs_ntsc_rs.dll`.
-Bei abweichender OBS-Installation vorher `$env:OBS_DIR = 'D:\Pfad\obs-studio'` setzen.
-`build.rs` erzeugt die Importbibliothek aus der installierten `obs.dll`.
-Die offiziellen OBS-Header liegen fest versioniert unter `vendor\obs-studio`.
-OBS selbst wird nicht gebaut und nicht verändert.
-Die gesperrten Rust-Abhängigkeiten sind unter `vendor/cargo` enthalten.
-Mit `$env:CARGO_NET_OFFLINE = 'true'` baut Cargo ohne Netzwerkzugriff.
+Output: `target\release\obs_ntsc_rs.dll`. For a non-default OBS location, set
+`$env:OBS_DIR = 'D:\path\to\obs-studio'` first. `build.rs` generates the import
+library from the installed `obs.dll`. `build-release.ps1` removes local user and
+build paths from the binary.
 
-### Linux
+### Windows packages
 
-Der Workflow `.github/workflows/linux.yml` baut und testet die Linux-Version
-automatisch auf Ubuntu 24.04 mit OBS aus der offiziellen OBS-Paketquelle (PPA).
-Lokal unter Linux (OBS 32 oder neuer als Systempaket, Rust, GCC, Python 3.12
-sowie die SIMDe-Header, unter Ubuntu Paket `libsimde-dev`):
+Requires Inno Setup 6 and Python:
+
+```powershell
+.\package.ps1
+```
+
+Output in `dist\releases`: `NTSC-RS-OBS-<version>-Windows-Setup.exe` and
+`NTSC-RS-OBS-<version>-Windows.zip`. Both use an explicit file allowlist and are
+scanned for local paths and common secret patterns (heuristic, not a guarantee).
+`-ZipOnly` builds only the ZIP. The script never uploads anything.
+
+The installer requires administrator rights, installs only this plugin into
+ProgramData and never closes OBS. EXE and DLL are not code-signed.
+
+## Build on Linux
+
+The workflow `.github/workflows/linux.yml` builds and tests the Linux version on
+Ubuntu 24.04 with OBS from the official OBS PPA. Locally you need OBS 32+ as a
+system package, Rust, GCC, Python 3.12 and the SIMDe headers (`libsimde-dev` on Ubuntu):
 
 ```sh
 cargo build --release --locked --offline
@@ -97,88 +81,45 @@ xvfb-run -a python3 tests/obs_smoke.py
 python3 packaging/package_linux.py
 ```
 
-Ausgabe: `target/release/libobs_ntsc_rs.so` und
-`dist/releases/NTSC-RS-OBS-0.2.0-Linux.zip`. Liegt `libobs.so.0` nicht im
-Standardsuchpfad, vorher `OBS_LIB_DIR` setzen. Flatpak- und Snap-OBS werden
-nicht unterstützt.
-
-### Windows-Downloadpakete
-
-Lokale Downloadpakete (Inno Setup 6 und Python erforderlich):
-
-```powershell
-.\package.ps1
-```
-
-Ausgabe unter `dist\releases`:
-
-- `NTSC-RS-OBS-0.2.0-Windows-Setup.exe`: Installer mit Deinstallation.
-- `NTSC-RS-OBS-0.2.0-Windows.zip`: manuelles Kopieren des Pluginordners.
-
-Die separate öffentliche Anleitung `packaging\README.txt` enthält den
-Proof-of-Concept-/Vibe-Coding-Hinweis. Die Downloads enthalten dieselbe DLL,
-Lizenzhinweise und keine lokalen technischen Handoffs oder PDB-Dateien.
-EXE und DLL sind nicht codesigniert; Windows kann eine SmartScreen-Warnung anzeigen.
-Der Installer verlangt Administratorrechte und installiert nur dieses Plugin nach
-ProgramData. Er beendet OBS niemals automatisch.
-
-`build-release.ps1` anonymisiert eingebettete Benutzer-/Buildpfade.
-`package.ps1` verwendet eine feste Dateiliste und prüft die fertigen Pakete auf
-bekannte persönliche Kennungen, lokale Pfade und gängige Secret-Muster.
-Diese Prüfung ist heuristisch, keine absolute Garantie.
-`-ZipOnly` baut und prüft nur das ZIP.
-Für eine öffentliche Weitergabe müssen passende Quellen und Lizenzhinweise
-bereitstehen. Es wird nichts automatisch hochgeladen oder auf GitHub veröffentlicht.
-
-Zusätzliche Pakettests:
-
-```powershell
-python .\tests\package_check.py
-python .\tests\installer_check.py
-```
-
-Der Installertest verwendet ausschließlich eigene Testordner, keine
-Administratorrechte und keinen Windows-Deinstallationseintrag. Die OBS-Prozesssperre
-ist nur in diesem separaten Testbuild ausgenommen; die öffentliche EXE prüft sie immer.
-Der produktive UAC-Dialog wurde nicht automatisiert getestet.
+Output: `target/release/libobs_ntsc_rs.so` and
+`dist/releases/NTSC-RS-OBS-<version>-Linux.zip`. If `libobs.so.0` is not in the
+default library path, set `OBS_LIB_DIR`. Flatpak and Snap OBS are not supported.
 
 ## Tests
 
 ```powershell
-$env:PATH = "$env:OBS_DIR\bin\64bit;C:\Program Files\obs-studio\bin\64bit;$env:PATH"
+$env:PATH = "C:\Program Files\obs-studio\bin\64bit;$env:PATH"
 cargo test --release --locked
 cargo clippy --release --all-targets -- -D warnings
 cargo fmt --check
 python .\tests\obs_smoke.py
+python .\tests\package_check.py
+python .\tests\installer_check.py
 ```
 
-Der Python-Test startet einen eigenen **libobs-/D3D11-Kontext** mit einem erzeugten
-Farbbalkenbild. Er öffnet keine Benutzerprofile, Szenen, Geräte oder Websocket-Verbindung.
-Mit `NTSC_PLUGIN_DLL` lässt sich eine andere DLL, beispielsweise die installierte, testen.
-Ergebnisse: `test-output\report.json`, `before.png`, `after.png`.
-Für jeden Test wird eine neue Presetdatei erstellt.
+`tests/obs_smoke.py` starts its own isolated libobs context (D3D11 on Windows,
+OpenGL on Linux) with a generated color-bar image. It never opens user profiles,
+scenes, devices or the websocket server. It checks plugin loading, animated
+processing, bypass, resolution changes, preset import/export with a Unicode path,
+export overwrite protection and clean shutdown. Set `NTSC_PLUGIN_DLL` to test
+another plugin file.
 
-Verifiziert mit der anonymisierten Release-DLL und OBS **32.2.2**:
+`tests/installer_check.py` uses a test-only installer build in isolated folders,
+without administrator rights or an uninstall registry entry. The production UAC
+flow is not tested automatically.
 
-- 4 Rust-Tests, Clippy und Formatprüfung bestanden.
-- Plugin lädt, verarbeitet echte GPU-Bilder und erzeugt animiertes Rauschen.
-- 30 verschiedene Effektbilder in 60 Ausgabe-Frames bei 640 × 480 / 60 FPS.
-- Mittlere OBS-Renderzeit im letzten Test etwa **0,49 ms**.
-  Das ist weder CPU-Verarbeitungszeit noch Ende-zu-Ende-Latenz.
-- Bypass, interne Auflösungsänderung, Unicode-Presetpfad, Import/Export,
-  Überschreibschutz und sauberes Beenden bestanden.
-- Kein automatisierter Test der Qt-Filteroberfläche im normalen OBS-Fenster.
+All Rust dependencies are vendored in `vendor/cargo`; with `CARGO_NET_OFFLINE=true`
+Cargo builds without network access.
 
-## Aufbau und Lizenzen
+## Layout and licenses
 
-- `native/filter.c`: OBS-Registrierung, Eigenschaften, Downscale, doppelter GPU-Readback, Upload.
-- `src/lib.rs`: Effektkern-Anbindung, Worker, Einstellungsvalidierung, JSON-Presets und Rust-Tests.
-- `native/bridge.h`: kleine C-/Rust-Schnittstelle.
-- `vendor/ntsc-rs`: unveränderter Effektkern, Commit `8cfc51014092a6dc1da5eb0217bb9ae6516b124e`.
-- `vendor/obs-studio`: unveränderte OBS-32.0.4-Header, Commit `dcdbd2e9048ae66237fdab32dbba72b745b1b9c5`.
+- `native/filter.c`: OBS registration, properties, downscale, double-buffered GPU readback, upload.
+- `src/lib.rs`: effect core binding, worker thread, settings validation, JSON presets, Rust tests.
+- `native/bridge.h`: small C/Rust interface.
+- `vendor/ntsc-rs`: unmodified ntsc-rs core, commit `8cfc51014092a6dc1da5eb0217bb9ae6516b124e`.
+- `vendor/obs-studio`: unmodified OBS 32.0.4 libobs headers, commit `dcdbd2e9048ae66237fdab32dbba72b745b1b9c5`.
 
-Plugin-Anbindung: **GPL-2.0-or-later**, siehe `LICENSE`.
-ntsc-rs-Kern: MIT / ISC / Apache-2.0 nach Wahl, Lizenztexte im Vendorordner.
-Die GUI-, OpenFX- und After-Effects-Anwendungen von ntsc-rs werden nicht mitgebaut.
-Weitere Rust-Abhängigkeiten und Versionen stehen in `Cargo.lock`; deren eigene Lizenzen gelten zusätzlich.
-Dies ist ein lokales, inoffizielles Integrationsprojekt.
+Plugin integration: **GPL-2.0-or-later**, see `LICENSE`.
+ntsc-rs core: MIT / ISC / Apache-2.0 at your option; license texts are in the vendor folder.
+Other Rust dependencies keep their own licenses, see `packaging/THIRD-PARTY.txt`.
+This is an unofficial integration project.

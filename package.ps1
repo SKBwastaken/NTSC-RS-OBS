@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $source = Join-Path $PSScriptRoot 'target\release\obs_ntsc_rs.dll'
-if (-not (Test-Path -LiteralPath $source)) { throw 'Zuerst cargo build --release ausfuehren.' }
+if (-not (Test-Path -LiteralPath $source)) { throw 'Release DLL missing. Run .\build-release.ps1 first.' }
 $package = Join-Path $PSScriptRoot 'dist\obs-ntsc-rs'
 $bin = Join-Path $package 'bin\64bit'
 $data = Join-Path $package 'data'
@@ -59,7 +59,7 @@ $auditArgs = @((Join-Path $PSScriptRoot 'tests\package_check.py'))
 if ($ZipOnly) { $auditArgs += '--zip-only' }
 & $Python @auditArgs
 if ($LASTEXITCODE -ne 0) { throw 'Package privacy/integrity checks failed. Do not publish these files.' }
-Write-Host "Paket: $package"
+Write-Host "Package: $package"
 Write-Host "Downloads: $releases"
-Write-Host 'Nur lokal erstellt. Kein GitHub-Push, Upload oder Release.'
-Write-Host 'Vor oeffentlicher Weitergabe passenden Quellcode gemaess GPL bereitstellen.'
+Write-Host 'Created locally only. Nothing was pushed, uploaded or released.'
+Write-Host 'Publish the matching source code (GPL) alongside any public release.'
