@@ -101,6 +101,14 @@ class FlatpakAutomationTests(unittest.TestCase):
         self.assertEqual(calls, [("ostree", "--repo=repo", "checkout", "--user-mode",
                                   "ref", "checkout")])
 
+    def test_local_bundle_install_uses_supported_options(self):
+        calls = []
+        with patch.object(build, "run", side_effect=lambda *args, **kwargs: calls.append(args)):
+            build.install_candidate(Path("candidate.flatpak"))
+        self.assertEqual(calls, [("flatpak", "install", "--user", "--noninteractive",
+                                  "--assumeyes", "--reinstall", "--no-deps", "--no-related",
+                                  "--bundle", "candidate.flatpak")])
+
     def test_source_archive_is_deterministic_and_explicit(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

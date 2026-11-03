@@ -70,6 +70,11 @@ def checkout_for_audit(repo, ref, destination):
     run("ostree", f"--repo={repo}", "checkout", "--user-mode", ref, str(destination))
 
 
+def install_candidate(candidate):
+    run("flatpak", "install", "--user", "--noninteractive", "--assumeyes", "--reinstall",
+        "--no-deps", "--no-related", "--bundle", str(candidate))
+
+
 def validate_lock(lock):
     if lock.get("schema") != 1 or lock.get("extension_branch") != "stable":
         raise ValueError("Unsupported Flatpak lock")
@@ -345,8 +350,7 @@ def build():
         if path.is_file():
             privacy_check(path.relative_to(checkout).as_posix(), path.read_bytes())
     privacy_check(candidate.name, candidate.read_bytes())
-    run("flatpak", "install", "--user", "--noninteractive", "--reinstall", "--no-deps",
-        "--no-related", "--no-gpg-verify", str(candidate))
+    install_candidate(candidate)
     sandbox_report = sandbox_test(helper, work)
     verify_lock(lock)
     releases = ROOT / "dist/releases"
