@@ -20,7 +20,7 @@ def main():
     args = [str(setup), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-",
             f"/DIR={destination}", f"/LOG={OUT / 'install.log'}"]
     subprocess.run(args, check=True, timeout=60)
-    expected = (ROOT / "target/release/obs_ntsc_rs.dll").read_bytes()
+    expected = (ROOT / "dist/obs-ntsc-rs/bin/64bit/obs-ntsc-rs.dll").read_bytes()
     dll = destination / "bin/64bit/obs-ntsc-rs.dll"
     assert dll.read_bytes() == expected
     from package_check import EXPECTED, privacy_check

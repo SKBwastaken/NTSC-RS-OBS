@@ -1,4 +1,4 @@
-#ifndef PluginVersion
+﻿#ifndef PluginVersion
   #define PluginVersion "0.2.0"
 #endif
 #define ProjectRoot AddBackslash(SourcePath) + ".."
@@ -22,16 +22,17 @@ OutputBaseFilename=NTSC-RS-OBS-{#PluginVersion}-Windows-Setup
 AppName=NTSC-RS for OBS
 AppVersion={#PluginVersion}
 AppPublisher=NTSC-RS for OBS
+DisableWelcomePage=yes
 DisableDirPage=yes
 DisableProgramGroupPage=yes
+ShowLanguageDialog=no
 ArchitecturesAllowed=x64os
 ArchitecturesInstallIn64BitMode=x64os
 MinVersion=10.0
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-LicenseFile={#Payload}\LICENSE-GPL-2.0.txt
-InfoBeforeFile={#SourcePath}\DISCLAIMER.txt
+WizardSizePercent=100
 CloseApplications=no
 RestartApplications=no
 UninstallDisplayName=NTSC-RS for OBS
@@ -41,7 +42,24 @@ VersionInfoDescription=NTSC-RS for OBS installer
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+
+[Messages]
+FinishedHeadingLabel=Setup complete
+
+[CustomMessages]
+TitleNew=Install NTSC-RS for OBS
+TitleUpdate=Update NTSC-RS for OBS
+TitleSame=Reinstall NTSC-RS for OBS
+TitleNewer=Replace NTSC-RS for OBS
+Subtitle=Native NTSC/VHS filter for OBS Studio
+ReadyNew=NTSC-RS for OBS %1 will be installed.%n%nClose OBS before you continue. Setup never closes OBS for you.
+ReadyUpdate=Version %2 is installed and will be updated to %1.%nYour presets and OBS settings are kept.%n%nClose OBS before you continue.
+ReadySame=Version %1 is already installed and will be reinstalled.%nYour presets and OBS settings are kept.%n%nClose OBS before you continue.
+ReadyNewer=A newer version (%2) is installed and will be replaced with %1.%nYour presets and OBS settings are kept.%n%nClose OBS before you continue.
+ButtonUpdate=&Update
+ButtonReinstall=&Reinstall
+ButtonReplace=&Replace
+Done=NTSC-RS for OBS %1 has been installed.%n%nIn OBS: Filters > Effect Filters > + > ntsc-rs (NTSC / VHS).
 
 [Dirs]
 Name: "{app}\data"
@@ -55,6 +73,127 @@ Source: "{#Payload}\THIRD-PARTY.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\data\README.txt"; DestDir: "{app}\data"; Flags: ignoreversion
 
 [Code]
+var
+  InstalledVersion: String;
+
+function NextVersionPart(var S: String): Integer;
+var
+  P: Integer;
+begin
+  P := Pos('.', S);
+  if P = 0 then
+  begin
+    Result := StrToIntDef(S, 0);
+    S := '';
+  end
+  else
+  begin
+    Result := StrToIntDef(Copy(S, 1, P - 1), 0);
+    Delete(S, 1, P);
+  end;
+end;
+
+function CompareVersions(A, B: String): Integer;
+var
+  X, Y: Integer;
+begin
+  Result := 0;
+  while (Result = 0) and ((A <> '') or (B <> '')) do
+  begin
+    X := NextVersionPart(A);
+    Y := NextVersionPart(B);
+    if X < Y then
+      Result := -1
+    else if X > Y then
+      Result := 1;
+  end;
+end;
+
+function ReadInstalledVersion: String;
+begin
+  Result := '';
+#ifdef TestInstalledVersion
+  { Test builds simulate an existing installation without touching the registry. }
+  Result := '{#TestInstalledVersion}';
+#else
+  #ifndef TestInstall
+  RegQueryStringValue(HKLM,
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{F9207DA1-D87E-4A46-B48C-E548AA7C6102}_is1',
+    'DisplayVersion', Result);
+  #endif
+#endif
+end;
+
+procedure InitializeWizard;
+begin
+  InstalledVersion := ReadInstalledVersion;
+  { WizardSizePercent cannot go below 100; the anchored layout shrinks with the form. }
+  WizardForm.ClientHeight := WizardForm.ClientHeight - ScaleY(170);
+  WizardForm.WizardSmallBitmapImage.Visible := False;
+  WizardForm.WizardBitmapImage2.Visible := False;
+end;
+
+procedure LayoutFinishedPage;
+var
+  L: Integer;
+begin
+  { Without the side image, align the text with the first page and use the full width. }
+  L := WizardForm.InnerNotebook.Left + WizardForm.ReadyLabel.Left;
+  WizardForm.FinishedHeadingLabel.Left := L;
+  WizardForm.FinishedHeadingLabel.Width := WizardForm.FinishedPage.ClientWidth - 2 * L;
+  WizardForm.FinishedHeadingLabel.AdjustHeight;
+  WizardForm.FinishedLabel.Left := L;
+  WizardForm.FinishedLabel.Width := WizardForm.FinishedHeadingLabel.Width;
+  WizardForm.FinishedLabel.Top := WizardForm.FinishedHeadingLabel.Top + WizardForm.FinishedHeadingLabel.Height + ScaleY(12);
+  WizardForm.FinishedLabel.AdjustHeight;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+var
+  Order: Integer;
+begin
+  if CurPageID = wpReady then
+  begin
+    { The ready label is sized for one line; the settings memo below it is empty here. }
+    WizardForm.ReadyMemo.Visible := False;
+    WizardForm.ReadyLabel.Height := WizardForm.ReadyMemo.Top + WizardForm.ReadyMemo.Height - WizardForm.ReadyLabel.Top;
+    WizardForm.PageDescriptionLabel.Caption := CustomMessage('Subtitle');
+    if InstalledVersion = '' then
+    begin
+      WizardForm.PageNameLabel.Caption := CustomMessage('TitleNew');
+      WizardForm.ReadyLabel.Caption := FmtMessage(CustomMessage('ReadyNew'), ['{#PluginVersion}']);
+      WizardForm.NextButton.Caption := SetupMessage(msgButtonInstall);
+    end
+    else
+    begin
+      Order := CompareVersions(InstalledVersion, '{#PluginVersion}');
+      if Order < 0 then
+      begin
+        WizardForm.PageNameLabel.Caption := CustomMessage('TitleUpdate');
+        WizardForm.ReadyLabel.Caption := FmtMessage(CustomMessage('ReadyUpdate'), ['{#PluginVersion}', InstalledVersion]);
+        WizardForm.NextButton.Caption := CustomMessage('ButtonUpdate');
+      end
+      else if Order = 0 then
+      begin
+        WizardForm.PageNameLabel.Caption := CustomMessage('TitleSame');
+        WizardForm.ReadyLabel.Caption := FmtMessage(CustomMessage('ReadySame'), ['{#PluginVersion}']);
+        WizardForm.NextButton.Caption := CustomMessage('ButtonReinstall');
+      end
+      else
+      begin
+        WizardForm.PageNameLabel.Caption := CustomMessage('TitleNewer');
+        WizardForm.ReadyLabel.Caption := FmtMessage(CustomMessage('ReadyNewer'), ['{#PluginVersion}', InstalledVersion]);
+        WizardForm.NextButton.Caption := CustomMessage('ButtonReplace');
+      end;
+    end;
+  end
+  else if CurPageID = wpFinished then
+  begin
+    WizardForm.FinishedLabel.Caption := FmtMessage(CustomMessage('Done'), ['{#PluginVersion}']);
+    LayoutFinishedPage;
+  end;
+end;
+
 function OBSIsRunning: Boolean;
 var
   Locator, Services, Processes: Variant;
